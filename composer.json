@@ -1,0 +1,22 @@
+{
+    "name": "cargomedia/cm-tools",
+    "license": "MIT",
+    "require": {
+		"cargomedia/cm": "~1.3.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~3.7.10"
+    },
+    "autoload": {
+        "psr-0": {
+            "CMTools_": "library/"
+        }
+    },
+    "extra": {
+        "cm-modules": {
+            "CMTools": {
+                "path": ""
+            }
+        }
+    }
+}
