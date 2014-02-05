@@ -52,17 +52,43 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	}
 
 	/**
-	 * @param string $namespace
+	 * @param string $moduleName
+	 * @throws CM_Cli_Exception_Internal
 	 */
-	public function createNamespace($namespace) {
-		$this->_createNamespaceDirectories($namespace);
-		CM_Bootloader::getInstance()->reloadNamespacePaths();
-		$this->_generatorPhp->createClassFile($namespace . '_Site');
+	public function createModule($moduleName) {
+		$modules = CM_Bootloader::getInstance()->getNamespaces();
+		if (in_array($moduleName, $modules)) {
+			throw new CM_Cli_Exception_Internal('Module `' . $moduleName . '` already exists');
+		}
+		$modulePathRelative = $this->_getModulePathRelative($moduleName);
+		$modulePath = DIR_ROOT . $modulePathRelative;
+		CM_Util::mkDir($modulePath);
+		$this->_getOutput()->writeln('Created `' . $modulePath . '`');
 
-		$bootloaderClass = $this->_generatorPhp->createClass($namespace . '_Bootloader');
-		$namespaces = array_merge(CM_Bootloader::getInstance()->getNamespaces(), array($namespace));
-		$bootloaderClass->addMethod(new CG_Method('getNamespaces', "return array('" . implode("', '", $namespaces) . "');"));
-		$this->_generatorPhp->createClassFileFromClass($bootloaderClass);
+		$configAdditions = array(
+			'extra' => array(
+				'cm-modules' => array(
+					$moduleName => array(
+						'path' => $modulePathRelative,
+					),
+				),
+			),
+		);
+		$this->_writeToComposerFile($configAdditions);
+		$this->_createNamespace($moduleName, $moduleName);
+	}
+
+	/**
+	 * @param string $moduleName
+	 * @param string $namespace
+	 * @throws CM_Cli_Exception_Internal
+	 */
+	public function createNamespace($moduleName, $namespace) {
+		$modules = CM_Bootloader::getInstance()->getNamespaces();
+		if (!in_array($moduleName, $modules)) {
+			throw new CM_Cli_Exception_Internal('Module `' . $moduleName . '` must exist! Existing modules: ' . join(', ', $modules));
+		}
+		$this->_createNamespace($moduleName, $namespace);
 	}
 
 	public function createJavascriptFiles() {
@@ -93,25 +119,93 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	}
 
 	/**
-	 * @param string $namespace
-	 */
-	private function _createNamespaceDirectories($namespace) {
-		$paths = array();
-		$paths[] = DIR_ROOT . 'library/' . $namespace . '/library/' . $namespace;
-		$paths[] = DIR_ROOT . 'library/' . $namespace . '/layout/default';
-		foreach ($paths as $path) {
-			CM_Util::mkDir($path);
-			$this->_getOutput()->writeln('Created `' . $path . '`');
-		}
-	}
-
-	/**
 	 * @param CM_File|null $file
 	 */
 	private function _logFileCreation(CM_File $file = null) {
 		if ($file) {
 			$this->_getOutput()->writeln('Created `' . $file->getPath() . '`');
 		}
+	}
+
+	/**
+	 * @param array $hash
+	 */
+	private function _writeToComposerFile(array $hash) {
+		$composerFile = new Composer\Json\JsonFile(DIR_ROOT . 'composer.json');
+		$configCurrent = $composerFile->read();
+		$configMerged = array_merge_recursive($configCurrent, $hash);
+		$composerFile->write($configMerged);
+		$this->_getOutput()->writeln('Modified `' . $composerFile->getPath() . '`');
+	}
+
+	private function _dumpComposerAutoload() {
+		$composer = CM_App_Installation::composerFactory();
+		$localRepo = $composer->getRepositoryManager()->getLocalRepository();
+		$package = $composer->getPackage();
+		$config = $composer->getConfig();
+
+		$io = new Composer\IO\NullIO();
+		$im = new \Composer\Installer\InstallationManager();
+		$im->addInstaller(new \Composer\Installer\LibraryInstaller($io, $composer, null));
+		$im->addInstaller(new \Composer\Installer\PearInstaller($io, $composer, 'pear-library'));
+		$im->addInstaller(new \Composer\Installer\InstallerInstaller($io, $composer));
+		$im->addInstaller(new \Composer\Installer\MetapackageInstaller($io));
+
+		$dispatcher = new \Composer\Script\EventDispatcher($composer, $io);
+		$generator = new \Composer\Autoload\AutoloadGenerator($dispatcher);
+		$generator->dump($config, $localRepo, $package, $im, 'composer');
+	}
+
+	private function _createNamespace($moduleName, $namespace) {
+		/** @var \Composer\Autoload\ClassLoader $autoloader */
+		$autoloader = include DIR_ROOT . 'vendor/autoload.php';
+		$namespacePrefixes = $autoloader->getPrefixes();
+		if (array_key_exists($namespace . '_', $namespacePrefixes)) {
+			throw new CM_Cli_Exception_Internal('Namespace `' . $namespace. '` already exists');
+		}
+		$namespacePathRelative = $this->_getNamespaceRelativePath($moduleName, $namespace);
+		$namespacePath = DIR_ROOT . $namespacePathRelative;
+		CM_Util::mkDir($namespacePath);
+		$this->_getOutput()->writeln('Created `' . $namespacePath . '`');
+
+		$configAdditions = array(
+				'autoload' => array(
+						'psr-0' => array(
+								$namespace . '_' => dirname($namespacePathRelative) . '/',
+						),
+				),
+		);
+		$this->_writeToComposerFile($configAdditions);
+		$this->_dumpComposerAutoload();
+	}
+
+	/**
+	 * @param string $moduleName
+	 * @return string
+	 */
+	private function _getModulePathRelative($moduleName) {
+		$pathsRelative = array(
+				'library/',
+				'src/',
+				'source/',
+		);
+		$namespacePathRelative = '';
+		foreach ($pathsRelative as $pathRelative) {
+			if (is_dir(DIR_ROOT . $pathRelative)) {
+				$namespacePathRelative = $pathRelative . $moduleName . '/';
+			}
+		}
+		return $namespacePathRelative;
+	}
+
+	/**
+	 * @param string $moduleName
+	 * @param string $namespace
+	 * @return string
+	 */
+	private function _getNamespaceRelativePath($moduleName, $namespace) {
+		$modulePathRelative = $this->_getModulePathRelative($moduleName);
+		return $modulePathRelative . 'library/' . $namespace . '/';
 	}
 
 	public static function getPackageName() {
