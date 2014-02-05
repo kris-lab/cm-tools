@@ -33,11 +33,11 @@ abstract class CMTools_CodeGenerator_Abstract {
 	 */
 	protected function _getClassDirectory($className) {
 		$namespace = CM_Util::getNamespace($className);
-		$libraryNamespacePaths = CM_Bootloader::getInstance()->getNamespacePathsLibrary();
-		if (!array_key_exists($namespace, $libraryNamespacePaths)) {
-			throw new CM_Exception_Invalid('Cannot generate code for non-library namespace');
+		$namespaces = CM_Bootloader::getInstance()->getNamespaces();
+		if (!in_array($namespace, $namespaces)) {
+			throw new CM_Exception_Invalid('Cannot find `' . $namespace . '` namespace');
 		}
-		return DIR_ROOT . $libraryNamespacePaths[$namespace];
+		return CM_Bootloader::getInstance()->getNamespacePath($namespace);
 	}
 
 	/**
