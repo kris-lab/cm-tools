@@ -2,20 +2,20 @@
 
 class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 
-	/** @var CMTools_CodeGenerator_Php */
+	/** @var CMTools_Generator_Class_Php */
 	protected $_generatorPhp;
 
-	/** @var CMTools_CodeGenerator_Javascript */
+	/** @var CMTools_Generator_Class_Javascript */
 	protected $_generatorJavascript;
 
-	/** @var CMTools_CodeGenerator_Layout */
+	/** @var CMTools_Generator_Class_Layout */
 	protected $_generatorLayout;
 
 	public function __construct(CM_InputStream_Interface $input = null, CM_OutputStream_Interface $output = null) {
 		parent::__construct($input, $output);
-		$this->_generatorPhp = new CMTools_CodeGenerator_Php();
-		$this->_generatorJavascript = new CMTools_CodeGenerator_Javascript();
-		$this->_generatorLayout = new CMTools_CodeGenerator_Layout();
+		$this->_generatorPhp = new CMTools_Generator_Class_Php();
+		$this->_generatorJavascript = new CMTools_Generator_Class_Javascript();
+		$this->_generatorLayout = new CMTools_Generator_Class_Layout();
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 
-abstract class CMTools_CodeGenerator_Abstract {
+abstract class CMTools_Generator_Class_Abstract {
 
 	/**
 	 * @param string $className

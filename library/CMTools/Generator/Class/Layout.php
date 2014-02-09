@@ -1,6 +1,6 @@
 <?php
 
-class CMTools_CodeGenerator_Layout extends CMTools_CodeGenerator_Abstract {
+class CMTools_Generator_Class_Layout extends CMTools_Generator_Class_Abstract {
 
 	/**
 	 * @param string $className
