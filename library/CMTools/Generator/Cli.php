@@ -52,30 +52,39 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	}
 
 	/**
-	 * @param string $moduleName
+	 * @param string       $moduleName
+	 * @param boolean|null $singleModuleStructure
+	 * @param string|null  $modulePath
 	 * @throws CM_Cli_Exception_Internal
 	 */
-	public function createModule($moduleName) {
-		$modules = CM_Bootloader::getInstance()->getNamespaces();
-		if (in_array($moduleName, $modules)) {
+	public function createModule($moduleName, $singleModuleStructure = null, $modulePath = null) {
+		$appInstallation = new CM_App_Installation();
+		$appInstallationHelper = new CMTools_Generator_AppInstallationHelper($appInstallation);
+		if ($appInstallationHelper->moduleExists($moduleName)) {
 			throw new CM_Cli_Exception_Internal('Module `' . $moduleName . '` already exists');
 		}
-		$modulePathRelative = $this->_getModulePathRelative($moduleName);
-		$modulePath = DIR_ROOT . $modulePathRelative;
-		CM_Util::mkDir($modulePath);
-		$this->_getOutput()->writeln('Created `' . $modulePath . '`');
 
-		$configAdditions = array(
-			'extra' => array(
-				'cm-modules' => array(
-					$moduleName => array(
-						'path' => $modulePathRelative,
-					),
-				),
-			),
-		);
-		$this->_writeToComposerFile($configAdditions);
-		$this->_createNamespace($moduleName, $moduleName);
+		if ($singleModuleStructure) {
+			if (count($appInstallationHelper->getModules()) > 0) {
+				throw new CM_Cli_Exception_Internal('Cannot create new `single-module-structure` module when some modules already exists');
+			}
+			if (null !== $modulePath) {
+				throw new CM_Cli_Exception_Internal('Cannot specify `module-path` when using `single-module-structure`');
+			}
+			$modulePath = '';
+		} else {
+			if ($appInstallationHelper->isSingleModuleStructure()) {
+				throw new CM_Cli_Exception_Internal('Cannot add more modules to `single-module-structure` package');
+			}
+			if (null === $modulePath) {
+				$modulePath = $appInstallationHelper->getModulesPath() . $moduleName;
+			}
+			if (null == $modulePath) {
+				throw new CM_Cli_Exception_Internal('Cannot find module path');
+			}
+		}
+		$builder = new CMTools_Generator_Builder($appInstallation, $this->_getOutput());
+		$builder->addModule($moduleName, $modulePath);
 	}
 
 	/**
@@ -138,30 +147,12 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 		$this->_getOutput()->writeln('Modified `' . $composerFile->getPath() . '`');
 	}
 
-	private function _dumpComposerAutoload() {
-		$composer = CM_App_Installation::composerFactory();
-		$localRepo = $composer->getRepositoryManager()->getLocalRepository();
-		$package = $composer->getPackage();
-		$config = $composer->getConfig();
-
-		$io = new Composer\IO\NullIO();
-		$im = new \Composer\Installer\InstallationManager();
-		$im->addInstaller(new \Composer\Installer\LibraryInstaller($io, $composer, null));
-		$im->addInstaller(new \Composer\Installer\PearInstaller($io, $composer, 'pear-library'));
-		$im->addInstaller(new \Composer\Installer\InstallerInstaller($io, $composer));
-		$im->addInstaller(new \Composer\Installer\MetapackageInstaller($io));
-
-		$dispatcher = new \Composer\Script\EventDispatcher($composer, $io);
-		$generator = new \Composer\Autoload\AutoloadGenerator($dispatcher);
-		$generator->dump($config, $localRepo, $package, $im, 'composer');
-	}
-
 	private function _createNamespace($moduleName, $namespace) {
 		/** @var \Composer\Autoload\ClassLoader $autoloader */
 		$autoloader = include DIR_ROOT . 'vendor/autoload.php';
 		$namespacePrefixes = $autoloader->getPrefixes();
 		if (array_key_exists($namespace . '_', $namespacePrefixes)) {
-			throw new CM_Cli_Exception_Internal('Namespace `' . $namespace. '` already exists');
+			throw new CM_Cli_Exception_Internal('Namespace `' . $namespace . '` already exists');
 		}
 		$namespacePathRelative = $this->_getNamespaceRelativePath($moduleName, $namespace);
 		$namespacePath = DIR_ROOT . $namespacePathRelative;
@@ -177,25 +168,6 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 		);
 		$this->_writeToComposerFile($configAdditions);
 		$this->_dumpComposerAutoload();
-	}
-
-	/**
-	 * @param string $moduleName
-	 * @return string
-	 */
-	private function _getModulePathRelative($moduleName) {
-		$pathsRelative = array(
-				'library/',
-				'src/',
-				'source/',
-		);
-		$namespacePathRelative = '';
-		foreach ($pathsRelative as $pathRelative) {
-			if (is_dir(DIR_ROOT . $pathRelative)) {
-				$namespacePathRelative = $pathRelative . $moduleName . '/';
-			}
-		}
-		return $namespacePathRelative;
 	}
 
 	/**

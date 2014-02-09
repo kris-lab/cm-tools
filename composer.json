@@ -2,13 +2,13 @@
     "name": "cargomedia/cm-tools",
     "license": "MIT",
     "require": {
-		"cargomedia/cm": "~1.3.10",
-		"tomaszdurka/codegenerator": "~0.1.2"
+        "cargomedia/cm": "~1.3.10",
+        "tomaszdurka/codegenerator": "~0.1.2"
     },
     "require-dev": {
         "phpunit/phpunit": "~3.7.10"
     },
-	"minimum-stability": "alpha",
+    "minimum-stability": "alpha",
     "autoload": {
         "psr-0": {
             "CMTools_": "library/"
