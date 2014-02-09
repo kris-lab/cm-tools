@@ -58,14 +58,13 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	 * @throws CM_Cli_Exception_Internal
 	 */
 	public function createModule($moduleName, $singleModuleStructure = null, $modulePath = null) {
-		$appInstallation = new CM_App_Installation();
-		$appInstallationHelper = new CMTools_Generator_AppInstallationHelper($appInstallation);
-		if ($appInstallationHelper->moduleExists($moduleName)) {
+		$appInstallation = new CMTools_AppInstallation();
+		if ($appInstallation->moduleExists($moduleName)) {
 			throw new CM_Cli_Exception_Internal('Module `' . $moduleName . '` already exists');
 		}
 
 		if ($singleModuleStructure) {
-			if (count($appInstallationHelper->getModules()) > 0) {
+			if (count($appInstallation->getModules()) > 0) {
 				throw new CM_Cli_Exception_Internal('Cannot create new `single-module-structure` module when some modules already exists');
 			}
 			if (null !== $modulePath) {
@@ -73,11 +72,11 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 			}
 			$modulePath = '';
 		} else {
-			if ($appInstallationHelper->isSingleModuleStructure()) {
+			if ($appInstallation->isSingleModuleStructure()) {
 				throw new CM_Cli_Exception_Internal('Cannot add more modules to `single-module-structure` package');
 			}
 			if (null === $modulePath) {
-				$modulePath = $appInstallationHelper->getModulesPath() . $moduleName;
+				$modulePath = $appInstallation->getModulesPath() . $moduleName;
 			}
 			if (null == $modulePath) {
 				throw new CM_Cli_Exception_Internal('Cannot find module path');

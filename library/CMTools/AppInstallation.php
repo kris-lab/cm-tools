@@ -1,20 +1,13 @@
 <?php
 
-class CMTools_Generator_AppInstallationHelper extends CM_Class_Abstract {
-
-	/** @var CM_App_Installation */
-	private $_installation;
-
-	public function __construct(CM_App_Installation $appInstallation) {
-		$this->_installation = $appInstallation;
-	}
+class CMTools_AppInstallation extends CM_App_Installation {
 
 	/**
 	 * @param string $name
 	 * @return bool
 	 */
 	public function moduleExists($name) {
-		return array_key_exists($name, $this->_installation->getModulePaths());
+		return array_key_exists($name, $this->getModulePaths());
 	}
 
 	/**
@@ -53,7 +46,7 @@ class CMTools_Generator_AppInstallationHelper extends CM_Class_Abstract {
 	}
 
 	public function dumpAutoload() {
-		$composer = $this->_installation->getComposer();
+		$composer = $this->getComposer();
 		$localRepo = $composer->getRepositoryManager()->getLocalRepository();
 		$package = $composer->getPackage();
 		$config = $composer->getConfig();
@@ -77,8 +70,8 @@ class CMTools_Generator_AppInstallationHelper extends CM_Class_Abstract {
 	 * @return CM_App_Package
 	 */
 	private function _getRootPackage() {
-		$rootPackageName = $this->_installation->getComposer()->getPackage()->getName();
-		foreach ($this->_installation->getPackages() as $package) {
+		$rootPackageName = $this->getComposer()->getPackage()->getName();
+		foreach ($this->getPackages() as $package) {
 			if ($package->getName() === $rootPackageName) {
 				return $package;
 			}
