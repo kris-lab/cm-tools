@@ -14,12 +14,16 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	/** @var CMTools_Generator_Class_Layout */
 	protected $_generatorLayout;
 
+	/** @var CMTools_Generator_Application */
+	protected $_generatorApp;
+
 	public function __construct(CM_InputStream_Interface $input = null, CM_OutputStream_Interface $output = null) {
 		parent::__construct($input, $output);
 		$this->_appInstallation = new CMTools_AppInstallation();
 		$this->_generatorPhp = new CMTools_Generator_Class_Php($this->_appInstallation, $this->_getOutput());
 		$this->_generatorJavascript = new CMTools_Generator_Class_Javascript($this->_appInstallation, $this->_getOutput());
 		$this->_generatorLayout = new CMTools_Generator_Class_Layout($this->_appInstallation, $this->_getOutput());
+		$this->_generatorApp = new CMTools_Generator_Application($this->_appInstallation, $this->_getOutput());
 	}
 
 	/**
@@ -74,8 +78,7 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 				throw new CM_Cli_Exception_Internal('Cannot find module path');
 			}
 		}
-		$builder = new CMTools_Generator_Application($this->_appInstallation, $this->_getOutput());
-		$builder->addModule($moduleName, $modulePath);
+		$this->_generatorApp->addModule($moduleName, $modulePath);
 	}
 
 	/**
@@ -84,11 +87,17 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	 * @throws CM_Cli_Exception_Internal
 	 */
 	public function createNamespace($moduleName, $namespace) {
-		$modules = CM_Bootloader::getInstance()->getNamespaces();
-		if (!in_array($moduleName, $modules)) {
+		if (!$this->_appInstallation->moduleExists($moduleName)) {
 			throw new CM_Cli_Exception_Internal('Module `' . $moduleName . '` must exist! Existing modules: ' . join(', ', $modules));
 		}
-		$this->_createNamespace($moduleName, $namespace);
+		/** @var \Composer\Autoload\ClassLoader $autoloader */
+		$autoLoader = include DIR_ROOT . 'vendor/autoload.php';
+		$namespacePrefixes = $autoLoader->getPrefixes();
+		if (array_key_exists($namespace . '_', $namespacePrefixes)) {
+			throw new CM_Cli_Exception_Internal('Namespace `' . $namespace . '` already exists');
+		}
+		$namespacePath = $this->_appInstallation->getModulePath($moduleName)  . 'library/' . $namespace;
+		$this->_generatorApp->addNamespace($namespace, $namespacePath);
 	}
 
 	public function createJavascriptFiles() {
@@ -115,50 +124,6 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * @param array $hash
-	 */
-	private function _writeToComposerFile(array $hash) {
-		$composerFile = new Composer\Json\JsonFile(DIR_ROOT . 'composer.json');
-		$configCurrent = $composerFile->read();
-		$configMerged = array_merge_recursive($configCurrent, $hash);
-		$composerFile->write($configMerged);
-		$this->_getOutput()->writeln('Modified `' . $composerFile->getPath() . '`');
-	}
-
-	private function _createNamespace($moduleName, $namespace) {
-		/** @var \Composer\Autoload\ClassLoader $autoloader */
-		$autoloader = include DIR_ROOT . 'vendor/autoload.php';
-		$namespacePrefixes = $autoloader->getPrefixes();
-		if (array_key_exists($namespace . '_', $namespacePrefixes)) {
-			throw new CM_Cli_Exception_Internal('Namespace `' . $namespace . '` already exists');
-		}
-		$namespacePathRelative = $this->_getNamespaceRelativePath($moduleName, $namespace);
-		$namespacePath = DIR_ROOT . $namespacePathRelative;
-		CM_Util::mkDir($namespacePath);
-		$this->_getOutput()->writeln('Created `' . $namespacePath . '`');
-
-		$configAdditions = array(
-				'autoload' => array(
-						'psr-0' => array(
-								$namespace . '_' => dirname($namespacePathRelative) . '/',
-						),
-				),
-		);
-		$this->_writeToComposerFile($configAdditions);
-		// $this->_dumpComposerAutoload();
-	}
-
-	/**
-	 * @param string $moduleName
-	 * @param string $namespace
-	 * @return string
-	 */
-	private function _getNamespaceRelativePath($moduleName, $namespace) {
-		$modulePathRelative = $this->_getModulePathRelative($moduleName);
-		return $modulePathRelative . 'library/' . $namespace . '/';
 	}
 
 	public static function getPackageName() {

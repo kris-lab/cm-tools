@@ -36,6 +36,22 @@ class CMTools_Generator_Application extends CM_Class_Abstract {
 	}
 
 	/**
+	 * @param string $name
+	 * @param string $path
+	 */
+	public function addNamespace($name, $path) {
+		$this->_filesystemHelper->createDirectory(DIR_ROOT . $path);
+		$configAdditions = array(
+				'autoload' => array(
+						'psr-0' => array(
+								$name . '_' => dirname($path) . '/',
+						),
+				),
+		);
+		$this->_writeToComposerFile($configAdditions);
+	}
+
+	/**
 	 * @param array $hash
 	 */
 	private function _writeToComposerFile(array $hash) {
