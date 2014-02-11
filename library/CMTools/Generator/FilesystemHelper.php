@@ -2,13 +2,13 @@
 
 class CMTools_Generator_FilesystemHelper extends CM_Class_Abstract {
 
-	/** @var CM_OutputStream_Abstract */
+	/** @var CM_OutputStream_Interface */
 	private $_output;
 
 	/**
-	 * @param CM_OutputStream_Abstract $output
+	 * @param CM_OutputStream_Interface $output
 	 */
-	public function __construct(CM_OutputStream_Abstract $output) {
+	public function __construct(CM_OutputStream_Interface $output) {
 		$this->_output = $output;
 	}
 

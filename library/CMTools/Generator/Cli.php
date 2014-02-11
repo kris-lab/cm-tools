@@ -71,7 +71,7 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 				throw new CM_Cli_Exception_Internal('Cannot find module path');
 			}
 		}
-		$builder = new CMTools_Generator_Builder($appInstallation, $this->_getOutput());
+		$builder = new CMTools_Generator_Application($appInstallation, $this->_getOutput());
 		$builder->addModule($moduleName, $modulePath);
 	}
 

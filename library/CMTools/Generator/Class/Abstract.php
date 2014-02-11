@@ -8,9 +8,9 @@ abstract class CMTools_Generator_Class_Abstract {
 	protected $_filesystemHelper;
 
 	/**
-	 * @param CM_OutputStream_Abstract $output
+	 * @param CM_OutputStream_Interface $output
 	 */
-	public function __construct(CM_OutputStream_Abstract $output) {
+	public function __construct(CM_OutputStream_Interface $output) {
 		$this->_filesystemHelper = new CMTools_Generator_FilesystemHelper($output);
 	}
 
