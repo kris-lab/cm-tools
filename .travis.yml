@@ -7,6 +7,8 @@ php:
 
 before_script:
   - phpenv config-add tests/travis/php.ini
+  - phpenv config-add tests/travis/php-$TRAVIS_PHP_VERSION.ini
+
   - composer self-update
   - composer install --dev
 
