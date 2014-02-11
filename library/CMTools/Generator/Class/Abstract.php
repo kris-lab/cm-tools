@@ -2,15 +2,18 @@
 
 abstract class CMTools_Generator_Class_Abstract {
 
-	/**
-	 * @var CMTools_Generator_FilesystemHelper
-	 */
+	/** @var CM_App_Installation */
+	protected $_appInstallation;
+
+	/** @var CMTools_Generator_FilesystemHelper */
 	protected $_filesystemHelper;
 
 	/**
+	 * @param CM_App_Installation       $appInstallation
 	 * @param CM_OutputStream_Interface $output
 	 */
-	public function __construct(CM_OutputStream_Interface $output) {
+	public function __construct(CM_App_Installation $appInstallation, CM_OutputStream_Interface $output) {
+		$this->_appInstallation = $appInstallation;
 		$this->_filesystemHelper = new CMTools_Generator_FilesystemHelper($output);
 	}
 
