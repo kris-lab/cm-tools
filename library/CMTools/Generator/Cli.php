@@ -100,32 +100,6 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 		$this->_generatorApp->addNamespace($namespace, $namespacePath);
 	}
 
-	public function createJavascriptFiles() {
-		$viewClasses = CM_View_Abstract::getClassChildren(true);
-		foreach ($viewClasses as $path => $className) {
-			if ($this->_isValidJavascriptView($className)) {
-				$jsPath = preg_replace('/\.php$/', '.js', $path);
-				if (!CM_File::exists($jsPath)) {
-					$this->_generatorJavascript->createClassFile($className);
-				}
-			}
-		}
-	}
-
-	/**
-	 * @param string $className
-	 * @return bool
-	 */
-	private function _isValidJavascriptView($className) {
-		$invalidClassNameList = array('CM_Mail');
-		foreach ($invalidClassNameList as $invalidClassName) {
-			if ($className === $invalidClassName || is_subclass_of($className, $invalidClassName)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	public static function getPackageName() {
 		return 'generator';
 	}
