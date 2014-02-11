@@ -44,16 +44,6 @@ class CMTools_AppInstallation extends CM_App_Installation {
 		return array_unique($modulePaths);
 	}
 
-	public function dumpAutoload() {
-		$composer = $this->getComposer();
-		$localRepo = $composer->getRepositoryManager()->getLocalRepository();
-		$package = $composer->getPackage();
-		$config = $composer->getConfig();
-		$im = $composer->getInstallationManager();
-		$generator = $composer->getAutoloadGenerator();
-		$generator->dump($config, $localRepo, $package, $im, 'composer');
-	}
-
 	/**
 	 * @return bool
 	 */

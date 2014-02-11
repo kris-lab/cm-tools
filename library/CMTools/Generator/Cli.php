@@ -98,6 +98,7 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 		}
 		$namespacePath = $this->_appInstallation->getModulePath($moduleName)  . 'library/' . $namespace;
 		$this->_generatorApp->addNamespace($namespace, $namespacePath);
+		$this->_generatorApp->dumpAutoload();
 	}
 
 	public static function getPackageName() {

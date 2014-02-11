@@ -51,6 +51,16 @@ class CMTools_Generator_Application extends CM_Class_Abstract {
 		$this->_writeToComposerFile($configAdditions);
 	}
 
+	public function dumpAutoload() {
+		$composer = $this->_installation->getComposer();
+		$localRepo = $composer->getRepositoryManager()->getLocalRepository();
+		$package = $composer->getPackage();
+		$config = $composer->getConfig();
+		$im = $composer->getInstallationManager();
+		$generator = $composer->getAutoloadGenerator();
+		$generator->dump($config, $localRepo, $package, $im, 'composer');
+	}
+
 	/**
 	 * @param array $hash
 	 */
