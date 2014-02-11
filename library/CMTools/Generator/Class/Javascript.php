@@ -22,6 +22,10 @@ class CMTools_Generator_Class_Javascript extends CMTools_Generator_Class_Abstrac
 		$this->_filesystemHelper->createFile($classPath, implode(PHP_EOL, $content));
 	}
 
+	/**
+	 * @param string $className
+	 * @return bool
+	 */
 	protected function _classExists($className) {
 		$namespace = CM_Util::getNamespace($className);
 		$classPath = CM_Util::getNamespacePath($namespace) . 'library/' . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.js';
