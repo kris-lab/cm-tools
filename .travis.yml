@@ -15,10 +15,5 @@ before_script:
 
 script: scripts/behat
 
-matrix:
-  allow_failures:
-    - php: 5.4
-    - php: 5.5
-
 notifications:
   email: false
