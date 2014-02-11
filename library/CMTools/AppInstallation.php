@@ -29,7 +29,6 @@ class CMTools_AppInstallation extends CM_App_Installation {
 	 * @return CM_App_Module[]
 	 */
 	public function getModules() {
-		return array();
 		return $this->_getRootPackage()->getModules();
 	}
 
