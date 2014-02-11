@@ -19,7 +19,7 @@ class CMTools_Generator_Class_Javascript extends CMTools_Generator_Class_Abstrac
 		$content[] = '});';
 		$content[] = '';
 		$classPath = $this->_getClassPath($className);
-		return CM_File::create($classPath, implode(PHP_EOL, $content));
+		$this->_filesystemHelper->createFile($classPath, implode(PHP_EOL, $content));
 	}
 
 	protected function _classExists($className) {

@@ -3,6 +3,18 @@
 abstract class CMTools_Generator_Class_Abstract {
 
 	/**
+	 * @var CMTools_Generator_FilesystemHelper
+	 */
+	protected $_filesystemHelper;
+
+	/**
+	 * @param CM_OutputStream_Abstract $output
+	 */
+	public function __construct(CM_OutputStream_Abstract $output) {
+		$this->_filesystemHelper = new CMTools_Generator_FilesystemHelper($output);
+	}
+
+	/**
 	 * @param string $className
 	 * @return string
 	 * @throws CM_Exception_Invalid

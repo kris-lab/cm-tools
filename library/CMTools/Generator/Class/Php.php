@@ -43,8 +43,8 @@ class CMTools_Generator_Class_Php extends CMTools_Generator_Class_Abstract {
 		$classPath = $this->_getClassPath($class->getName());
 		$file = new CG_File();
 		$file->addBlock($class);
-		CM_Util::mkDir(dirname($classPath));
-		return CM_File::create($classPath, $file->dump());
+		$this->_filesystemHelper->createDirectory(dirname($classPath) .'/');
+		return $this->_filesystemHelper->createFile($classPath, $file->dump());
 	}
 
 	/**

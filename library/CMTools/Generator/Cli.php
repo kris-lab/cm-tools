@@ -13,9 +13,9 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 
 	public function __construct(CM_InputStream_Interface $input = null, CM_OutputStream_Interface $output = null) {
 		parent::__construct($input, $output);
-		$this->_generatorPhp = new CMTools_Generator_Class_Php();
-		$this->_generatorJavascript = new CMTools_Generator_Class_Javascript();
-		$this->_generatorLayout = new CMTools_Generator_Class_Layout();
+		$this->_generatorPhp = new CMTools_Generator_Class_Php($this->_getOutput());
+		$this->_generatorJavascript = new CMTools_Generator_Class_Javascript($this->_getOutput());
+		$this->_generatorLayout = new CMTools_Generator_Class_Layout($this->_getOutput());
 	}
 
 	/**
@@ -23,20 +23,10 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 	 * @throws CM_Exception_Invalid
 	 */
 	public function createView($className) {
-		if (class_exists($className)) {
-			throw new CM_Exception_Invalid('`' . $className . '` already exists');
-		}
-		$phpClassFile = $this->_generatorPhp->createClassFile($className);
-		$this->_logFileCreation($phpClassFile);
-
-		$jsClassFile = $this->_generatorJavascript->createClassFile($className);
-		$this->_logFileCreation($jsClassFile);
-
-		$templateFile = $this->_generatorLayout->createTemplateFile($className);
-		$this->_logFileCreation($templateFile);
-
-		$stylesheetFile = $this->_generatorLayout->createStylesheetFile($className);
-		$this->_logFileCreation($stylesheetFile);
+		$this->_generatorPhp->createClassFile($className);
+		$this->_generatorJavascript->createClassFile($className);
+		$this->_generatorLayout->createTemplateFile($className);
+		$this->_generatorLayout->createStylesheetFile($className);
 	}
 
 	/**
@@ -47,8 +37,7 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 		if (class_exists($className) && !$this->_getInput()->confirm('Class `' . $className . '` already exists. Replace?')) {
 			return;
 		}
-		$file = $this->_generatorPhp->createClassFile($className);
-		$this->_logFileCreation($file);
+		$this->_generatorPhp->createClassFile($className);
 	}
 
 	/**
@@ -105,8 +94,7 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 			if ($this->_isValidJavascriptView($className)) {
 				$jsPath = preg_replace('/\.php$/', '.js', $path);
 				if (!CM_File::exists($jsPath)) {
-					$jsClassFile = $this->_generatorJavascript->createClassFile($className);
-					$this->_logFileCreation($jsClassFile);
+					$this->_generatorJavascript->createClassFile($className);
 				}
 			}
 		}
@@ -124,15 +112,6 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * @param CM_File|null $file
-	 */
-	private function _logFileCreation(CM_File $file = null) {
-		if ($file) {
-			$this->_getOutput()->writeln('Created `' . $file->getPath() . '`');
-		}
 	}
 
 	/**
@@ -166,7 +145,7 @@ class CMTools_Generator_Cli extends CM_Cli_Runnable_Abstract {
 				),
 		);
 		$this->_writeToComposerFile($configAdditions);
-		$this->_dumpComposerAutoload();
+		// $this->_dumpComposerAutoload();
 	}
 
 	/**

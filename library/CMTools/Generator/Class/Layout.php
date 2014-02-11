@@ -4,47 +4,45 @@ class CMTools_Generator_Class_Layout extends CMTools_Generator_Class_Abstract {
 
 	/**
 	 * @param string $className
-	 * @return CM_File|null
 	 */
 	public function createTemplateFile($className) {
 		$reflectionClass = new ReflectionClass($className);
 		if ($reflectionClass->isSubclassOf('CM_Form_Abstract')) {
-			return null;
+			return;
 		}
+		$templatePath = $this->_getTemplateDirectory($className);
+		$this->_filesystemHelper->createDirectory($templatePath);
 
-		$templateFile = $this->_createLayoutFile($className, 'default.tpl');
+		$content = '';
 		if ($reflectionClass->isSubclassOf('CM_Page_Abstract')) {
 			$content = $this->_getPageContent($reflectionClass);
-			$templateFile->write($content);
 		}
-		return $templateFile;
+		$this->_createLayoutFile($className, 'default.tpl', $content);
 	}
 
 	/**
 	 * @param string $className
-	 * @return CM_File|null
 	 */
 	public function createStylesheetFile($className) {
 		$reflectionClass = new ReflectionClass($className);
-		if ($reflectionClass->isSubclassOf('CM_Form_Abstract')) {
-			return null;
+		if (!$reflectionClass->isSubclassOf('CM_Form_Abstract')) {
+			$this->_createLayoutFile($className, 'default.less');
 		}
-		return $this->_createLayoutFile($className, 'default.less');
 	}
 
 	/**
 	 * @param string $className
 	 * @param string $templateBasename
+	 * @param string $content
 	 * @throws CM_Exception_Invalid
 	 * @return CM_File
 	 */
-	private function _createLayoutFile($className, $templateBasename) {
+	private function _createLayoutFile($className, $templateBasename, $content = null) {
 		if (!$this->_classExists($className)) {
 			throw new CM_Exception_Invalid('Cannot create layout for non-existing class `' . $className . '`');
 		}
 		$templateDirectory = $this->_getTemplateDirectory($className);
-		CM_Util::mkDir($templateDirectory);
-		return CM_File::create($templateDirectory . $templateBasename);
+		$this->_filesystemHelper->createFile($templateDirectory . $templateBasename, $content);
 	}
 
 	/**
