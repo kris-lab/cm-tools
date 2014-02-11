@@ -1,6 +1,6 @@
 <?php
 
-class CMTools_Generator_Builder extends CM_Class_Abstract {
+class CMTools_Generator_Application extends CM_Class_Abstract {
 
 	/** @var CM_App_Installation */
 	private $_installation;
@@ -22,7 +22,8 @@ class CMTools_Generator_Builder extends CM_Class_Abstract {
 	 * @param string $path
 	 */
 	public function addModule($name, $path) {
-		$this->_createDirectory(DIR_ROOT . $path);
+		$filesystemHelper = new CMTools_Generator_FilesystemHelper($this->_output);
+		$filesystemHelper->createDirectory(DIR_ROOT . $path);
 		$configAdditions = array(
 				'extra' => array(
 						'cm-modules' => array(
@@ -41,29 +42,12 @@ class CMTools_Generator_Builder extends CM_Class_Abstract {
 	private function _writeToComposerFile(array $hash) {
 		$composerFile = new Composer\Json\JsonFile(DIR_ROOT . 'composer.json');
 		$configCurrent = $composerFile->read();
-		$this->_notify('modify', $composerFile->getPath());
+
+		$filesystemHelper = new CMTools_Generator_FilesystemHelper($this->_output);
+		$filesystemHelper->notify('modify', $composerFile->getPath());
+
 		$configMerged = array_merge_recursive($configCurrent, $hash);
 		$composerFile->write($configMerged);
-	}
 
-	/**
-	 * @param string $path
-	 */
-	private function _createDirectory($path) {
-		if (is_dir($path)) {
-			$this->_notify('skip', $path);
-		} else {
-			$this->_notify('create', $path);
-		}
-		CM_Util::mkDir($path);
-	}
-
-	/**
-	 * @param string $action
-	 * @param string $path
-	 */
-	private function _notify($action, $path) {
-		$actionMessage = str_pad($action, 7, ' ', STR_PAD_LEFT);
-		$this->_output->writeln($actionMessage . ' ' . $path);
 	}
 }
